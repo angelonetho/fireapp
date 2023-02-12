@@ -1,5 +1,5 @@
 import { signOut } from 'firebase/auth'
-import { addDoc, collection, doc, onSnapshot, orderBy, query, where } from 'firebase/firestore'
+import { addDoc, collection, deleteDoc, doc, onSnapshot, orderBy, query, where } from 'firebase/firestore'
 import { useEffect, useState } from 'react'
 
 import { auth, db } from '../../firebaseConnection'
@@ -33,7 +33,6 @@ export default function Admin() {
                         })
                     })
 
-                    console.log(lista)
                     setTarefas(lista)
                 })
 
@@ -69,6 +68,11 @@ export default function Admin() {
         await signOut(auth)
     }
 
+    async function deleteTarefa(id) {
+        const docRef = doc(db, "tarefas", id)
+        await deleteDoc(docRef)
+    }
+
     return(
         <div className='admin-container'>
             <h1>Minhas tarefas</h1>
@@ -83,13 +87,15 @@ export default function Admin() {
                 <button className='btn-register' type='submit'>Registrar tarefa</button>
             </form>
 
-            <article className='list'>
-                <p>Estudar js e reactjs hj a noite</p>
-                <div>
-                    <button>Editar</button>
-                    <button className='btn-delete'>Concluir</button>
-                </div>
-            </article>
+            {tarefas.map((item) => (
+                <article className='list' key={item.id}>
+                    <p>{item.tarefa}</p>
+                    <div>
+                        <button>Editar</button>
+                        <button className='btn-delete' onClick={ () => deleteTarefa(item.id) }>Concluir</button>
+                     </div>
+                 </article>
+            ))}
 
             <button className='btn-logout' onClick={handleLogout}>Sair</button>
         </div>
