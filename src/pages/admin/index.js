@@ -9,12 +9,37 @@ import './admin.css'
 export default function Admin() {
 
     const [tarefaInput, setTarefaInput] = useState("")
+    const [user, setUser] = useState({})
 
+    useEffect(() => {
+        async function loadTarefas() {
+            const userDetail = localStorage.getItem("@detailUser")
+            setUser(JSON.parse(userDetail))
+        }
+
+        loadTarefas()
+    }, [])
 
     async function handleRegister(e) {
         e.preventDefault()
 
+        if(tarefaInput === '') {
+            alert("Digite sua tarefa...")
+            return
+        }
 
+        await addDoc(collection(db, "tarefas"), {
+            tarefa: tarefaInput,
+            created: new Date(),
+            userUid: user?.uid
+        })
+        .then(() => {
+            console.log("Tarefa Registrada")
+            setTarefaInput('')
+        })
+        .catch((error) => {
+            console.log(error)
+        })
     }
 
     async function handleLogout() {
