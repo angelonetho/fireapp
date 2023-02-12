@@ -1,5 +1,5 @@
 import { signOut } from 'firebase/auth'
-import { addDoc, collection, deleteDoc, doc, onSnapshot, orderBy, query, where } from 'firebase/firestore'
+import { addDoc, collection, deleteDoc, doc, onSnapshot, orderBy, query, updateDoc, where } from 'firebase/firestore'
 import { useEffect, useState } from 'react'
 
 import { auth, db } from '../../firebaseConnection'
@@ -11,6 +11,7 @@ export default function Admin() {
     const [tarefaInput, setTarefaInput] = useState("")
     const [user, setUser] = useState({})
     const [tarefas, setTarefas] = useState([])
+    const [edit, setEdit] = useState({})
 
     useEffect(() => {
         async function loadTarefas() {
@@ -50,6 +51,11 @@ export default function Admin() {
             return
         }
 
+        if(edit?.id) {
+            handleUpdateTarefa()
+            return
+        }
+
         await addDoc(collection(db, "tarefas"), {
             tarefa: tarefaInput,
             created: new Date(),
@@ -73,6 +79,28 @@ export default function Admin() {
         await deleteDoc(docRef)
     }
 
+    async function editTarefa(item) {
+        setTarefaInput(item.tarefa)
+        setEdit(item)
+    }
+
+    async function handleUpdateTarefa() {
+        const docRef = doc(db, "tarefas", edit?.id)
+        await updateDoc(docRef, {
+            tarefa: tarefaInput
+        })
+        .then(() => {
+            console.log("tarefa atualizada")
+            setTarefaInput('')
+            setEdit({})
+        })
+        .catch(()=> {
+            console.log("erro")
+            setTarefaInput('')
+            setEdit({})
+        })
+    }
+
     return(
         <div className='admin-container'>
             <h1>Minhas tarefas</h1>
@@ -84,14 +112,18 @@ export default function Admin() {
                     onChange={(e) => setTarefaInput(e.target.value)}
                 />
 
-                <button className='btn-register' type='submit'>Registrar tarefa</button>
+                {Object.keys(edit).length > 0 ? (
+                    <button className='btn-register' type='submit' style={{backgroundColor: '#6add39'}}>Atualizar tarefa</button>
+                ) : (
+                    <button className='btn-register' type='submit'>Registrar tarefa</button>
+                )}
             </form>
 
             {tarefas.map((item) => (
                 <article className='list' key={item.id}>
                     <p>{item.tarefa}</p>
                     <div>
-                        <button>Editar</button>
+                        <button onClick={ () => editTarefa(item) }>Editar</button>
                         <button className='btn-delete' onClick={ () => deleteTarefa(item.id) }>Concluir</button>
                      </div>
                  </article>
